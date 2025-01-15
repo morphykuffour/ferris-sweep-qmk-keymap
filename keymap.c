@@ -3,6 +3,10 @@
 
 #include QMK_KEYBOARD_H
 
+#if defined(OS_DETECTION_ENABLE)
+    #include "os_detection.h"
+#endif
+
 enum custom_keycodes {
     SMTD_KEYCODES_BEGIN = SAFE_RANGE,
     CKC_Z, // reads as C(ustom) + KC_A
@@ -15,6 +19,7 @@ enum custom_keycodes {
     CKC_SLSH,
     CKC_CLGV,
     CKC_GUTA,
+    CKC_COPY,
     SMTD_KEYCODES_END,
 };
 
@@ -27,6 +32,24 @@ enum custom_keycodes {
 // Layer 1: SMTD_LT(CKC_CLGV, KC_GRV, 1)
 // Layer 2: SMTD_LT(CKC_GUTA, KC_TAB, 2)
 
+// Some helper C macros
+    #define GENERAL_MODIFIER_KEY_DELAY_MS 20
+    #define GENERAL_KEY_ACTION_DELAY_MS   50
+
+    #define KEY_MODIFIER_ACTION(keycode, modifier) \
+        SS_DOWN(modifier) \
+        SS_DELAY(GENERAL_MODIFIER_KEY_DELAY_MS) \
+        SS_TAP(keycode) \
+        SS_DELAY(GENERAL_KEY_ACTION_DELAY_MS) \
+        SS_UP(modifier) \
+        SS_DELAY(GENERAL_MODIFIER_KEY_DELAY_MS)
+
+    #define KEY_CTRL_ACTION(keycode) \
+        KEY_MODIFIER_ACTION(keycode,X_LCTL)
+
+    #define KEY_APPLE_KEY_ACTION(keycode) \
+        KEY_MODIFIER_ACTION(keycode,X_LCMD)
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT(
     KC_Q,    KC_W,    KC_F,    KC_P,    KC_B,            KC_J,    KC_L,  KC_U,    KC_Y,   KC_SCLN,
@@ -38,7 +61,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [1] = LAYOUT(
     KC_1,    KC_2,    KC_3,    KC_4,    KC_5,            KC_6,    KC_7,    KC_8,    KC_9,    KC_0,
     QK_GESC, KC_HOME, KC_PGDN, KC_PGUP, KC_END,          KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT, KC_QUOT,
-    KC_TRNS, KC_TRNS, KC_TRNS, KC_BTN1, KC_BTN2,         KC_MS_L, KC_MS_D, KC_MS_U, KC_MS_R, KC_ENT,
+    KC_TRNS, KC_TRNS, CKC_COPY, KC_BTN1, KC_BTN2,         KC_MS_L, KC_MS_D, KC_MS_U, KC_MS_R, KC_ENT,
                                     KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS
   ),
 
@@ -64,6 +87,19 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // your code here
     // QMK: shift + backspace = delete
     switch (keycode) {
+        case CKC_COPY:
+            if (record->event.pressed) {
+                os_variant_t host = detected_host_os();
+                if (host == OS_MACOS || host == OS_IOS) {
+                    // Mac: Cmd + C
+                    SEND_STRING(KEY_APPLE_KEY_ACTION(X_C));
+                }
+                else {
+                    // Linux, Windows, etc.: Ctrl + C
+                    SEND_STRING(KEY_CTRL_ACTION(X_C));
+                }
+            }
+            break;
         case KC_BSPC: {
             static uint16_t registered_key = KC_NO;
             if (record->event.pressed) {  // On key press.
@@ -122,3 +158,10 @@ void on_smtd_action(uint16_t keycode, smtd_action action, uint8_t tap_count) {
 // compile
 // qmk compile -c -kb ferris/sweep -km colemak-dh -e CONVERT_TO=rp2040_ce
 // qmk compile -c -kb ferris/sweep -km vial -e CONVERT_TO=rp2040_ce
+
+// features
+// https://www.monotux.tech/posts/2024/05/qmk-os-detection/
+// https://getreuer.info/posts/keyboards/macros3/index.html#a-mouse-jiggler
+// https://github.com/stasmarkin/sm_td.git
+// https://www.reddit.com/r/qmk/comments/1i1uik2/getting_os_detection_into_a_macro/?share_id=jwGzhv4UoJQ-W5FqVNdVc&utm_content=1&utm_medium=ios_app&utm_name=ioscss&utm_source=share&utm_term=1
+
