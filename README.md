@@ -18,6 +18,12 @@ Clone this repo into ferris sweep keymaps directory
 git clone --recurse-submodules https://github.com/morphykuffour/ferris-sweep-qmk-keymap.git ~/git/vial-qmk/keyboards/ferris/sweep/keymaps/colemak-dh
 ```
 
+Pull submodules into qmk-vial directory
+```bash
+cd ~/git/vial-qmk
+make git-submodule
+```
+
 Compile
 ```bash
 qmk compile -c -kb ferris/sweep -km colemak-dh -e CONVERT_TO=rp2040_ce
