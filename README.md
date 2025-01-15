@@ -13,15 +13,15 @@ git clone https://github.com/vial-kb/vial-qmk.git ~/git/vial-qmk
 cd ~/git/vial-qmk
 ```
 
-Clone this repo into ferris sweep keymaps directory
-```bash
-git clone --recurse-submodules https://github.com/morphykuffour/ferris-sweep-qmk-keymap.git ~/git/vial-qmk/keyboards/ferris/sweep/keymaps/colemak-dh
-```
-
 Pull submodules into qmk-vial directory
 ```bash
 cd ~/git/vial-qmk
 make git-submodule
+```
+
+Clone this repo into ferris sweep keymaps directory
+```bash
+git clone --recurse-submodules https://github.com/morphykuffour/ferris-sweep-qmk-keymap.git ~/git/vial-qmk/keyboards/ferris/sweep/keymaps/colemak-dh
 ```
 
 Compile
