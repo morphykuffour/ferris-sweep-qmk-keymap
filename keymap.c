@@ -9,6 +9,7 @@
 
 enum custom_keycodes {
     CKC_COPY = SAFE_RANGE,
+    CKC_PASTE,
     SMTD_KEYCODES_BEGIN,
     CKC_Z, // reads as C(ustom) + KC_A
     CKC_X,
@@ -98,6 +99,21 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 else {
                     // Linux, Windows, etc.: Ctrl + C
                     SEND_STRING(KEY_CTRL_ACTION(X_C));
+                }
+                #endif
+            }
+            break;
+        case CKC_PASTE:
+            if (record->event.pressed) {
+                #if defined(OS_DETECTION_ENABLE)
+                os_variant_t host = detected_host_os();
+                if (host == OS_MACOS || host == OS_IOS) {
+                    // Mac: Cmd + V
+                    SEND_STRING(KEY_APPLE_KEY_ACTION(X_V));
+                }
+                else {
+                    // Linux, Windows, etc.: Ctrl + V
+                    SEND_STRING(KEY_CTRL_ACTION(X_V));
                 }
                 #endif
             }
