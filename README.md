@@ -33,3 +33,5 @@ qmk compile -c -kb ferris/sweep -km colemak-dh -e CONVERT_TO=rp2040_ce
 This keymap utilizes stasmarkin's sm_td user library for QMK for handling tap dance.
 
 This keymap includes Shift + Backspace = Delete from [Pascal Getreuer](https://getreuer.info/posts/keyboards/macros3/index.html)
+
+This keymap has copy and paste keycodes that are os agnostic. See keymap.c
