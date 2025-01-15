@@ -1,4 +1,11 @@
 ## Getting Started
+[Setup build environment](https://docs.qmk.fm/newbs_getting_started#set-up-your-environment)
+
+Run QMK Setup
+```bash
+qmk setup
+```
+
 Clone qmk-vial repo
 ```bash
 mkdir ~/git
