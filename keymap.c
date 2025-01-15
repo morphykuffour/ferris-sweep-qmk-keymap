@@ -8,7 +8,8 @@
 #endif
 
 enum custom_keycodes {
-    SMTD_KEYCODES_BEGIN = SAFE_RANGE,
+    CKC_COPY = SAFE_RANGE,
+    SMTD_KEYCODES_BEGIN,
     CKC_Z, // reads as C(ustom) + KC_A
     CKC_X,
     CKC_C,
@@ -19,7 +20,6 @@ enum custom_keycodes {
     CKC_SLSH,
     CKC_CLGV,
     CKC_GUTA,
-    CKC_COPY,
     SMTD_KEYCODES_END,
 };
 
