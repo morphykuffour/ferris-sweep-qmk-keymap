@@ -89,6 +89,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case CKC_COPY:
             if (record->event.pressed) {
+                #if defined(OS_DETECTION_ENABLE)
                 os_variant_t host = detected_host_os();
                 if (host == OS_MACOS || host == OS_IOS) {
                     // Mac: Cmd + C
@@ -98,6 +99,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     // Linux, Windows, etc.: Ctrl + C
                     SEND_STRING(KEY_CTRL_ACTION(X_C));
                 }
+                #endif
             }
             break;
         case KC_BSPC: {
