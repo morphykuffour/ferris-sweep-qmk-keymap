@@ -8,7 +8,7 @@ cd ~/git/vial-qmk
 
 Clone this repo into ferris sweep keymaps directory
 ```bash
-git clone git@github.com:morphykuffour/ferris-sweep-qmk-keymap.git ~/git/vial-qmk/keyboards/ferris/sweep/keymaps/colemak-dh
+git clone --recurse-submodules https://github.com/morphykuffour/ferris-sweep-qmk-keymap.git ~/git/vial-qmk/keyboards/ferris/sweep/keymaps/colemak-dh
 ```
 
 Compile
