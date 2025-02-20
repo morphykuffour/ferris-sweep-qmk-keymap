@@ -2,6 +2,7 @@
 // This is the canonical layout file for the Quantum project. If you want to add another keyboard,
 
 #include QMK_KEYBOARD_H
+#include "raw_hid.h"
 
 #if defined(OS_DETECTION_ENABLE)
     #include "os_detection.h"
@@ -77,7 +78,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [3] = LAYOUT(
     KC_TRNS,  KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
     KC_TRNS,  KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-    KC_TRNS,  KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
+    KC_Q,  KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
                                     KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS
   ),
 };
@@ -204,6 +205,68 @@ void on_smtd_action(uint16_t keycode, smtd_action action, uint8_t tap_count) {
     }
 }
 
+bool raw_hid_receive_kb(uint8_t *data, uint8_t length) {
+    uint8_t response[32] = {0};  // Initialize array to zeros
+    memset(response, 0, sizeof(response));  // Extra safety with memset
+
+    if (data[0] == 0xFF) {  // Test command
+
+        // Toggle Layer 3
+        layer_invert(3);
+
+        response[0] = 0xFF;
+        response[1] = 0xAA;
+        raw_hid_send(response, length);
+        return true;
+    }
+    return false;
+}
+
+/*
+void raw_hid_receive_kb(uint8_t *data, uint8_t length) {
+    uint8_t response[RAW_EPSIZE] = {0};  // RAW_EPSIZE is typically 32 or 64
+
+    switch(data[1]) {  // Check the mode byte
+        case 0x00:  // Normal mode
+            if (layer_move_to(0)) {  // Assuming layer 0 is normal mode
+                response[0] = 0x00;  // Success
+            } else {
+                response[0] = 0xFF;  // Failure
+            }
+            break;
+
+        case 0x01:  // Insert mode
+            if (layer_move_to(1)) {  // Assuming layer 1 is insert mode
+                response[0] = 0x00;
+            } else {
+                response[0] = 0xFF;
+            }
+            break;
+
+        case 0x02:  // Visual mode
+            if (layer_move_to(2)) {  // Assuming layer 2 is visual mode
+                response[0] = 0x00;
+            } else {
+                response[0] = 0xFF;
+            }
+            break;
+
+        case 0x03:  // Command mode
+            if (layer_move_to(3)) {  // Assuming layer 3 is command mode
+                response[0] = 0x00;
+            } else {
+                response[0] = 0xFF;
+            }
+            break;
+
+        default:
+            response[0] = 0xFF;
+    }
+
+    raw_hid_send(response, RAW_EPSIZE);
+}
+*/
+
 // compile
 // qmk compile -c -kb ferris/sweep -km colemak-dh -e CONVERT_TO=rp2040_ce
 // qmk compile -c -kb ferris/sweep -km vial -e CONVERT_TO=rp2040_ce
@@ -213,4 +276,4 @@ void on_smtd_action(uint16_t keycode, smtd_action action, uint8_t tap_count) {
 // https://getreuer.info/posts/keyboards/macros3/index.html#a-mouse-jiggler
 // https://github.com/stasmarkin/sm_td.git
 // https://www.reddit.com/r/qmk/comments/1i1uik2/getting_os_detection_into_a_macro/?share_id=jwGzhv4UoJQ-W5FqVNdVc&utm_content=1&utm_medium=ios_app&utm_name=ioscss&utm_source=share&utm_term=1
-
+// https://docs.qmk.fm/features/rawhid
