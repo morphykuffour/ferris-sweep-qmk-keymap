@@ -1,6 +1,3 @@
-// this is the style you want to emulate.
-// This is the canonical layout file for the Quantum project. If you want to add another keyboard,
-
 #include QMK_KEYBOARD_H
 #include <raw_hid.h>
 
@@ -206,21 +203,34 @@ void on_smtd_action(uint16_t keycode, smtd_action action, uint8_t tap_count) {
 }
 
 bool raw_hid_receive_kb(uint8_t *data, uint8_t length) {
-    uint8_t command = data[0];
     uint8_t response[32] = {0};
 
-    switch (command) {
+    dprintf("Received command: %02X, data[1]: %02X\n", data[0], data[1]);  // Debug incoming command
+
+    switch(data[0]) {
         case 0x40:  // Get current layer
-            response[0] = get_highest_layer(layer_state);
+            response[0] = (uint8_t)get_highest_layer(layer_state);
+            dprintf("Current layer: %d\n", response[0]);
             raw_hid_send(response, length);
             return true;
 
-        case 0x30:  // Layer 0 (Normal mode)
-        case 0x31:  // Layer 1 (Insert mode)
-        case 0x32:  // Layer 2 (Visual mode)
-        case 0x33:  // Layer 3 (Command mode)
-            layer_move(command - 0x30);  // Convert command to layer number
-            response[0] = command;
+        case 0x00:  // Layer switch command
+            uint8_t target_layer = data[1];
+            uint8_t current_layer = get_highest_layer(layer_state);
+            dprintf("Attempting layer switch from %d to %d\n", current_layer, target_layer);
+
+            if (target_layer <= 3) {
+                layer_move(target_layer);
+                // Verify the layer actually changed
+                current_layer = get_highest_layer(layer_state);
+                dprintf("Layer after switch: %d\n", current_layer);
+
+                response[0] = 0x00;
+                response[1] = current_layer;  // Return actual layer, not target
+                response[2] = 0xAA;
+            } else {
+                response[0] = 0xFF;
+            }
             raw_hid_send(response, length);
             return true;
     }

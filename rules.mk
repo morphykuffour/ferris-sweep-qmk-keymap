@@ -6,3 +6,4 @@ MOUSE_ENABLE = yes
 DEFERRED_EXEC_ENABLE = yes
 OS_DETECTION_ENABLE = yes
 RAW_ENABLE = yes
+CONSOLE_ENABLE = yes  # For debug prints
