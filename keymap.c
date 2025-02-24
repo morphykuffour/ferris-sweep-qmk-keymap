@@ -2,7 +2,7 @@
 // This is the canonical layout file for the Quantum project. If you want to add another keyboard,
 
 #include QMK_KEYBOARD_H
-#include "raw_hid.h"
+#include <raw_hid.h>
 
 #if defined(OS_DETECTION_ENABLE)
     #include "os_detection.h"
@@ -206,66 +206,27 @@ void on_smtd_action(uint16_t keycode, smtd_action action, uint8_t tap_count) {
 }
 
 bool raw_hid_receive_kb(uint8_t *data, uint8_t length) {
-    uint8_t response[32] = {0};  // Initialize array to zeros
-    memset(response, 0, sizeof(response));  // Extra safety with memset
+    uint8_t command = data[0];
+    uint8_t response[32] = {0};
 
-    if (data[0] == 0xFF) {  // Test command
+    switch (command) {
+        case 0x40:  // Get current layer
+            response[0] = get_highest_layer(layer_state);
+            raw_hid_send(response, length);
+            return true;
 
-        // Toggle Layer 3
-        layer_invert(3);
-
-        response[0] = 0xFF;
-        response[1] = 0xAA;
-        raw_hid_send(response, length);
-        return true;
+        case 0x30:  // Layer 0 (Normal mode)
+        case 0x31:  // Layer 1 (Insert mode)
+        case 0x32:  // Layer 2 (Visual mode)
+        case 0x33:  // Layer 3 (Command mode)
+            layer_move(command - 0x30);  // Convert command to layer number
+            response[0] = command;
+            raw_hid_send(response, length);
+            return true;
     }
+
     return false;
 }
-
-/*
-void raw_hid_receive_kb(uint8_t *data, uint8_t length) {
-    uint8_t response[RAW_EPSIZE] = {0};  // RAW_EPSIZE is typically 32 or 64
-
-    switch(data[1]) {  // Check the mode byte
-        case 0x00:  // Normal mode
-            if (layer_move_to(0)) {  // Assuming layer 0 is normal mode
-                response[0] = 0x00;  // Success
-            } else {
-                response[0] = 0xFF;  // Failure
-            }
-            break;
-
-        case 0x01:  // Insert mode
-            if (layer_move_to(1)) {  // Assuming layer 1 is insert mode
-                response[0] = 0x00;
-            } else {
-                response[0] = 0xFF;
-            }
-            break;
-
-        case 0x02:  // Visual mode
-            if (layer_move_to(2)) {  // Assuming layer 2 is visual mode
-                response[0] = 0x00;
-            } else {
-                response[0] = 0xFF;
-            }
-            break;
-
-        case 0x03:  // Command mode
-            if (layer_move_to(3)) {  // Assuming layer 3 is command mode
-                response[0] = 0x00;
-            } else {
-                response[0] = 0xFF;
-            }
-            break;
-
-        default:
-            response[0] = 0xFF;
-    }
-
-    raw_hid_send(response, RAW_EPSIZE);
-}
-*/
 
 // compile
 // qmk compile -c -kb ferris/sweep -km colemak-dh -e CONVERT_TO=rp2040_ce
