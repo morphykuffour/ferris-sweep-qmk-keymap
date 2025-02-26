@@ -1,5 +1,6 @@
 #include QMK_KEYBOARD_H
 #include <raw_hid.h>
+#include "print.h"
 
 #if defined(OS_DETECTION_ENABLE)
     #include "os_detection.h"
@@ -50,6 +51,16 @@ enum custom_keycodes {
     #define KEY_APPLE_KEY_ACTION(keycode) \
         KEY_MODIFIER_ACTION(keycode,X_LCMD)
 
+
+#define KC_CTSC RCTL_T(KC_SCLN)
+#define KC_CTLA LCTL_T(KC_A)
+#define KC_LSHZ LSFT_T(KC_Z)
+#define KC_RLSH RSFT_T(KC_SLSH)
+#define KC_SPM2 LT(2, KC_SPC)
+#define KC_BSM1 LT(1, KC_BSPC)
+#define KC_GUTA GUI_T(KC_TAB)
+#define KC_CLGV CTL_T(KC_GRV)
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT(
     KC_Q,    KC_W,    KC_F,    KC_P,    KC_B,            KC_J,    KC_L,  KC_U,    KC_Y,   KC_SCLN,
@@ -73,10 +84,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   ),
 
   [3] = LAYOUT(
-    KC_TRNS,  KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-    KC_TRNS,  KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-    KC_Q,  KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-                                    KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS
+    KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,            KC_Y,    KC_U,  KC_I,    KC_O,   KC_P,
+    KC_CTLA, KC_S,    KC_D,    KC_F,    KC_G,            KC_H,    KC_J,  KC_K,    KC_L,   KC_SCLN,
+    KC_LSHZ, KC_X,    KC_C,    KC_V,    KC_B,            KC_N,    KC_M,  KC_COMM, KC_DOT, KC_RLSH,
+                                    KC_CLGV, KC_BSM1, KC_SPM2, KC_GUTA
   ),
 };
 
@@ -202,37 +213,53 @@ void on_smtd_action(uint16_t keycode, smtd_action action, uint8_t tap_count) {
     }
 }
 
+void keyboard_post_init_user(void) {
+  // Customise these values to desired behaviour
+  debug_enable=true;
+  debug_matrix=true;
+  debug_keyboard=true;
+  //debug_mouse=true;
+}
+
+// Add this at the top with your other defines
+#define BUFFER_SIZE 32
+
 bool raw_hid_receive_kb(uint8_t *data, uint8_t length) {
-    uint8_t response[32] = {0};
+    uint8_t response[BUFFER_SIZE] = {0};  // Use fixed size buffer
 
-    dprintf("Received command: %02X, data[1]: %02X\n", data[0], data[1]);  // Debug incoming command
+    // Print every byte received
+    for (uint8_t i = 0; i < length; i++) {
+        dprintf("data[%d] = 0x%02X\n", i, data[i]);
+    }
 
-    switch(data[0]) {
+    switch(data[0]) {  // Command byte
         case 0x40:  // Get current layer
             response[0] = (uint8_t)get_highest_layer(layer_state);
-            dprintf("Current layer: %d\n", response[0]);
+            dprintf("Sending layer: %d\n", response[0]);
             raw_hid_send(response, length);
             return true;
 
-        case 0x00:  // Layer switch command
+        case 0x00: {  // Layer switch command
             uint8_t target_layer = data[1];
-            uint8_t current_layer = get_highest_layer(layer_state);
-            dprintf("Attempting layer switch from %d to %d\n", current_layer, target_layer);
+            dprintf("Switching to layer: %d\n", target_layer);
 
             if (target_layer <= 3) {
+                layer_clear();  // Clear all layers first
                 layer_move(target_layer);
-                // Verify the layer actually changed
-                current_layer = get_highest_layer(layer_state);
-                dprintf("Layer after switch: %d\n", current_layer);
+                uint8_t new_layer = get_highest_layer(layer_state);
 
-                response[0] = 0x00;
-                response[1] = current_layer;  // Return actual layer, not target
-                response[2] = 0xAA;
+                response[0] = 0x00;  // Success
+                response[1] = new_layer;
+                response[2] = 0xAA;  // Ack
+                dprintf("Switch successful, now at layer: %d\n", new_layer);
             } else {
-                response[0] = 0xFF;
+                response[0] = 0xFF;  // Error
+                dprintf("Invalid layer: %d\n", target_layer);
             }
+
             raw_hid_send(response, length);
             return true;
+        }
     }
 
     return false;
