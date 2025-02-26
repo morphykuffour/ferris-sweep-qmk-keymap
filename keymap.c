@@ -225,39 +225,24 @@ void keyboard_post_init_user(void) {
 #define BUFFER_SIZE 32
 
 bool raw_hid_receive_kb(uint8_t *data, uint8_t length) {
-    uint8_t response[BUFFER_SIZE] = {0};  // Use fixed size buffer
-
-    // Print every byte received
-    for (uint8_t i = 0; i < length; i++) {
-        dprintf("data[%d] = 0x%02X\n", i, data[i]);
-    }
-
     switch(data[0]) {  // Command byte
         case 0x40:  // Get current layer
-            response[0] = (uint8_t)get_highest_layer(layer_state);
-            dprintf("Sending layer: %d\n", response[0]);
-            raw_hid_send(response, length);
+            data[0] = (uint8_t)get_highest_layer(layer_state);
+            raw_hid_send(data, length);
             return true;
 
         case 0x00: {  // Layer switch command
             uint8_t target_layer = data[1];
-            dprintf("Switching to layer: %d\n", target_layer);
-
             if (target_layer <= 3) {
-                layer_clear();  // Clear all layers first
                 layer_move(target_layer);
-                uint8_t new_layer = get_highest_layer(layer_state);
-
-                response[0] = 0x00;  // Success
-                response[1] = new_layer;
-                response[2] = 0xAA;  // Ack
-                dprintf("Switch successful, now at layer: %d\n", new_layer);
+                // Reuse the input buffer for response
+                data[0] = 0x00;        // Success
+                data[1] = get_highest_layer(layer_state);  // Current layer
+                data[2] = 0xAA;        // Acknowledgment
             } else {
-                response[0] = 0xFF;  // Error
-                dprintf("Invalid layer: %d\n", target_layer);
+                data[0] = 0xFF;  // Error
             }
-
-            raw_hid_send(response, length);
+            raw_hid_send(data, length);
             return true;
         }
     }
