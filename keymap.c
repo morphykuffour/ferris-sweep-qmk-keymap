@@ -221,33 +221,34 @@ void keyboard_post_init_user(void) {
   //debug_mouse=true;
 }
 
-// Add this at the top with your other defines
-#define BUFFER_SIZE 32
 
-bool raw_hid_receive_kb(uint8_t *data, uint8_t length) {
-    switch(data[0]) {  // Command byte
+// Raw HID handler for layer switching
+void raw_hid_receive_kb(uint8_t *data, uint8_t length) {
+    uint8_t *command_id = &(data[0]);
+    
+    switch (*command_id) {
         case 0x40:  // Get current layer
-            data[0] = (uint8_t)get_highest_layer(layer_state);
-            raw_hid_send(data, length);
-            return true;
+            data[0] = (uint8_t)get_highest_layer(default_layer_state);
+            break;
 
         case 0x00: {  // Layer switch command
             uint8_t target_layer = data[1];
             if (target_layer <= 3) {
-                layer_move(target_layer);
-                // Reuse the input buffer for response
+                set_single_persistent_default_layer(target_layer);
                 data[0] = 0x00;        // Success
-                data[1] = get_highest_layer(layer_state);  // Current layer
-                data[2] = 0xAA;        // Acknowledgment
+                data[1] = target_layer;
+                data[2] = 0xAA;        // Ack
             } else {
-                data[0] = 0xFF;  // Error
+                *command_id = 0xFF;    // Error / unhandled
             }
-            raw_hid_send(data, length);
-            return true;
+            break;
         }
-    }
 
-    return false;
+        default:
+            *command_id = 0xFF;  // id_unhandled - let VIA know we didn't handle it
+            break;
+    }
+    // Note: raw_hid_send is called by via.c after this returns
 }
 
 // compile
