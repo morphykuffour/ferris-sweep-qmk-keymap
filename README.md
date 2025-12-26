@@ -1,37 +1,79 @@
-## Getting Started
-[Setup build environment](https://docs.qmk.fm/newbs_getting_started#set-up-your-environment)
+# Ferris Sweep Colemak-DH Keymap
 
-Run QMK Setup
+A personalized QMK/Vial keymap for the Ferris Sweep keyboard featuring Colemak-DH layout, sm_td for home row mods, OS-aware copy/paste, mouse jiggler, and Vial support.
+
+## Quick Start
+
 ```bash
-qmk setup
+git clone --recurse-submodules git@github.com:morphykuffour/ferris-sweep-qmk-keymap.git
+cd ferris-sweep-qmk-keymap
+./setup.sh
+./build.sh
 ```
 
-Clone qmk-vial repo
+## Manual Setup
+
+1. Install QMK dependencies - see https://docs.qmk.fm/newbs_getting_started
+
+2. Clone vial-qmk:
 ```bash
-mkdir ~/git
 git clone https://github.com/vial-kb/vial-qmk.git ~/git/vial-qmk
-cd ~/git/vial-qmk
-```
-
-Pull submodules into qmk-vial directory
-```bash
 cd ~/git/vial-qmk
 make git-submodule
 ```
 
-Clone this repo into ferris sweep keymaps directory
+3. Clone this keymap:
 ```bash
 git clone --recurse-submodules git@github.com:morphykuffour/ferris-sweep-qmk-keymap.git ~/git/vial-qmk/keyboards/ferris/sweep/keymaps/colemak-dh
 ```
 
-Compile
+4. Build:
 ```bash
-qmk compile -c -kb ferris/sweep -km colemak-dh -e CONVERT_TO=rp2040_ce
+qmk compile -kb ferris/sweep -km colemak-dh -e CONVERT_TO=rp2040_ce
+```
+
+## Building
+
+```bash
+make build         # Build firmware
+make build-clean   # Clean build  
+make flash         # Flash firmware
+make flash-left    # Flash left half
+make flash-right   # Flash right half
+make firmware      # Copy .uf2 to current dir
+```
+
+Or use build.sh directly:
+```bash
+./build.sh --clean                   # Clean build
+./build.sh --flash                   # Flash after build
+./build.sh --convert-to elite_pi    # Build for Elite-Pi
+./build.sh --no-convert             # Build for Pro Micro
 ```
 
 ## Features
-This keymap utilizes stasmarkin's sm_td user library for QMK for handling tap dance.
 
-This keymap includes Shift + Backspace = Delete from [Pascal Getreuer](https://getreuer.info/posts/keyboards/macros3/index.html)
+- **sm_td** - Smart Tap Dance for responsive home row mods
+- **OS-aware copy/paste** - Cmd+C/V on macOS, Ctrl+C/V on Linux/Windows
+- **Mouse jiggler** - Prevent screen lock
+- **Shift+Backspace = Delete**
+- **Raw HID** - Programmatic layer switching
+- **Vial** - Real-time keymap editing
 
-This keymap has copy and paste keycodes that are os agnostic. See keymap.c
+## Files
+
+- keymap.c - Keymap with layers and custom keycodes
+- config.h - Keyboard config (layers, VIAL settings)
+- rules.mk - Build features
+- vial.json - Vial GUI layout
+- sm_td/ - Smart Tap Dance submodule
+- setup.sh - Environment setup script
+- build.sh - Build script
+- Makefile - Convenience targets
+
+## Resources
+
+- https://docs.qmk.fm/
+- https://get.vial.today/docs/
+- https://github.com/stasmarkin/sm_td
+- https://getreuer.info/posts/keyboards/
