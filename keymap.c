@@ -8,6 +8,8 @@
 
 enum custom_keycodes {
     CKC_COPY = SAFE_RANGE,
+    FORCE_QWERTY,
+    FORCE_COLEMAK,
     CKC_PASTE,
     JIGGLE,
     SMTD_KEYCODES_BEGIN,
@@ -60,6 +62,8 @@ enum custom_keycodes {
 #define KC_BSM1 LT(1, KC_BSPC)
 #define KC_GUTA GUI_T(KC_TAB)
 #define KC_CLGV CTL_T(KC_GRV)
+
+
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT(
@@ -128,6 +132,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // your code here
     // QMK: shift + backspace = delete
     switch (keycode) {
+        case FORCE_QWERTY:
+            if (record->event.pressed) {
+                set_single_persistent_default_layer(3);
+            }
+            return false;
+        case FORCE_COLEMAK:
+            if (record->event.pressed) {
+                set_single_persistent_default_layer(0);
+            }
+            return false;
         case CKC_COPY:
             if (record->event.pressed) {
                 #if defined(OS_DETECTION_ENABLE)
